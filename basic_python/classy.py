@@ -17,7 +17,8 @@ class Print2:
         a=value
         self.a = a
         print(self.a)
-
+    def print(self):
+        print(self.a)
 
 class Print3(Print2):
     def __init__(self, value):

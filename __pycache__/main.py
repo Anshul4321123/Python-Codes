@@ -83,7 +83,7 @@ def main():
                 score += 0.2
             elif star.y >= player.y and star.colliderect(player):
                 stars.remove(star)
-                hit = True
+                hit =True
                 break
 
         if hit:
