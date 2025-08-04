@@ -17,7 +17,7 @@ def connect_db():
         host="localhost",
         port=5432,
         user="postgres",
-        password="Anshul@896",
+        password="",
         dbname="book_management_test"
     )
 
