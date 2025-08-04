@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Book Management</title>
+</head>
+<body>
+  <h1>Book Management</h1>
+
+  <h2>Search Books</h2>
+  <label>Author: <input type="text" id="search-author"></label>
+  <label>Genre: <input type="text" id="search-genre"></label>
+  <label>Published Year: <input type="number" id="search-year"></label>
+  <button onclick="fetchBooks()">Search</button>
+
+  <h2>Add / Update Book</h2>
+  <form id="book-form" onsubmit="submitBook(event)">
+    <input type="hidden" id="book-id">
+    <label>Title: <input type="text" id="title" required></label><br>
+    <label>Author: <input type="text" id="author" required></label><br>
+    <label>Published Year: <input type="number" id="published_year" required></label><br>
+    <label>Genre: <input type="text" id="genre" required></label><br>
+    <label>Rating: <input type="number" id="rating" step="0.1" min="0" max="5" required></label><br>
+    <button type="submit">Save</button>
+  </form>
+
+  <h2>Books List</h2>
+  <ul id="books-list"></ul>
+
+  <script>
+    const apiUrl = "http://127.0.0.1:8000/books";
+
+    async function fetchBooks() {
+      const author = document.getElementById('search-author').value;
+      const genre = document.getElementById('search-genre').value;
+      const year = document.getElementById('search-year').value;
+
+      let url = apiUrl + '?';
+      if (author) url += `author=${encodeURIComponent(author)}&`;
+      if (genre) url += `genre=${encodeURIComponent(genre)}&`;
+      if (year) url += `published_year=${year}&`;
+
+      const response = await fetch(url);
+      const books = await response.json();
+
+      const list = document.getElementById('books-list');
+      list.innerHTML = '';
+      books.forEach(book => {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          <strong>${book.title}</strong> by ${book.author} (${book.published_year}) - ${book.genre} - Rating: ${book.rating}
+          <button onclick="editBook(${book.id})">Edit</button>
+          <button onclick="deleteBook(${book.id})">Delete</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function submitBook(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('book-id').value;
+      const book = {
+        title: document.getElementById('title').value,
+        author: document.getElementById('author').value,
+        published_year: parseInt(document.getElementById('published_year').value),
+        genre: document.getElementById('genre').value,
+        rating: parseFloat(document.getElementById('rating').value),
+      };
+
+      const method = id ? 'PUT' : 'POST';
+      const endpoint = id ? `${apiUrl}/${id}` : apiUrl;
+
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(book)
+      });
+
+      if (response.ok) {
+        alert('Book saved successfully.');
+        document.getElementById('book-form').reset();
+        fetchBooks();
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.detail}`);
+      }
+    }
+
+    async function editBook(id) {
+      const response = await fetch(`${apiUrl}/${id}`);
+      const book = await response.json();
+
+      document.getElementById('book-id').value = book.id;
+      document.getElementById('title').value = book.title;
+      document.getElementById('author').value = book.author;
+      document.getElementById('published_year').value = book.published_year;
+      document.getElementById('genre').value = book.genre;
+      document.getElementById('rating').value = book.rating;
+    }
+
+    async function deleteBook(id) {
+      if (confirm('Are you sure you want to delete this book?')) {
+        const response = await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          alert('Book deleted.');
+          fetchBooks();
+        } else {
+          alert('Failed to delete the book.');
+        }
+      }
+    }
+
+    fetchBooks();
+  </script>
+</body>
+</html>
